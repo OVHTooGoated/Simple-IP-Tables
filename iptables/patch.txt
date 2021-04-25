@@ -1,0 +1,3 @@
+iptables -A INPUT -j DROP -s 184.150.15.0/24
+iptables -A INPUT -j DROP -s 184.150.16.0/20
+iptables -A INPUT -j DROP -s 184.150.32.0/19

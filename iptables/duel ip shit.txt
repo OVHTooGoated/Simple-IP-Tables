@@ -1,0 +1,40 @@
+iptables -t mangle -A PREROUTING -p tcp --source admin ip --dport ssh -j ACCEPT
+iptables -t mangle -A PREROUTING -p tcp --dport ssh -j DROP
+iptables-save
+iptables -A INPUT -p tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+iptables -A INPUT -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN -j DROP
+iptables -A INPUT -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+iptables -A INPUT -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+iptables -A INPUT -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -A INPUT -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+iptables -A INPUT -f -j DROP
+iptables-save
+sudo ufw allow 22/tcp //ssh port
+sudo ufw allow 3544/udp
+sudo ufw allow 4500/udp
+sudo ufw allow 6672/udp
+sudo ufw allow 3479/udp
+sudo ufw allow 61455/udp
+sudo ufw allow from whitelist customers ip's
+sudo ufw enable && clear
+
+
+change 50000 to ssh
+
+
+iptables -N CHECK1
+iptables -A CHECK1 -p udp -m length --length 1:65535 -m limit --limit 5/second -j ACCEPT
+iptables -A CHECK1 -j DROP
+iptables -A INPUT -p tcp -m length --length 1:65535 -j CHECK1
+iptables -A CHECK1 -p tcp -m length --length 1:65535 -m limit --limit 5/second -j ACCEPT
+iptables -A CHECK1 -j DROP
+iptables-save
+=========
+/sbin/iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source second ip
+sysctl -w net.ipv4.tcp_syncookies=1 > /dev/null
+sysctl -w net.ipv4.tcp_max_syn_backlog=16384 > /dev/null
+sysctl -w net.netfilter.nf_conntrack_max=2500000 > /dev/null
+sysctl -w net.netfilter.nf_conntrack_buckets=125000 > /dev/null
+sysctl -w net.netfilter.nf_conntrack_tcp_timeout_time_wait=5 > /dev/null
+sysctl -w net.ipv4.ip_local_port_range="1026 65000" > /dev/null
+echo 5 > /proc/sys/net/ipv4/tcp_fin_timeout

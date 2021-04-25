@@ -1,0 +1,2313 @@
+                 
+
+
+
+                          ALL OVH PATCHES I HAVE
+                       =============================
+
+
+               
+                                                  
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ___   __ __  __ __       _____   ___ ______  __ __  ____ 
+ /   \ |  |  ||  |  |     / ___/  /  _]      ||  |  ||    \
+|     ||  |  ||  |  |    (   \_  /  [_|      ||  |  ||  o  )
+|  O  ||  |  ||  _  |     \__  ||    _]_|  |_||  |  ||   _/ 
+|     ||  :  ||  |  |     /  \ ||   [_  |  |  |  :  ||  |   
+|     | \   / |  |  |     \    ||     | |  |  |     ||  |   
+ \___/   \_/  |__|__|      \___||_____| |__|   \__,_||__|   
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "OVH Setup Ubuntu 16.04"
+
+apt-get update
+
+apt-get upgrade
+
+apt install build-essential
+
+wget http://www.softether-download.com/files/softether/v4.22-9634-beta-2016.11.27-tree/Linux/SoftEther_VPN_Server/64bit_-_Intel_x64_or_AMD64/softether-vpnserver-v4.22-9634-beta-2016.11.27-linux-x64-64bit.tar.gz
+
+tar xzf softether-vpnserver-v4.22-9634-beta-2016.11.27-linux-x64-64bit.tar.gz
+
+cd vpnserver
+sudo make
+
+sudo ./vpnserver start
+
+//////////////////////////
+
+echo "How To Change SSH Port"
+
+nano /etc/ssh/sshd_config
+
+CTRL \ (make sure its the right SLASH)
+
+(Replace Port)=65511
+
+(Put New Port)
+
+CTRL Y
+
+CTRL X
+
+service sshd restart
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   _____                                        _____       _           
+  / ____|                                      |  __ \     | |          
+ | |     ___  _ __ ___  _ __ ___   ___  _ __   | |__) |   _| | ___  ___ 
+ | |    / _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \  |  _  / | | | |/ _ \/ __|
+ | |___| (_) | | | | | | | | | | | (_) | | | | | | \ \ |_| | |  __/\__ \
+  \_____\___/|_| |_| |_|_| |_| |_|\___/|_| |_| |_|  \_\__,_|_|\___||___/
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Flush All In Coming Traffic"
+
+tcpdump -n -i any
+
+#//////////////////////////
+
+echo "Close UDP Ports"
+
+iptables -A INPUT -p udp --dport 15 -j DROP
+
+#//////////////////////////
+
+echo "Close TCP Ports"
+
+iptables -A INPUT -p tcp --dport 15 -j DROP
+
+#//////////////////////////
+
+echo "Install DSTAT"
+
+apt-get install dstat
+
+#//////////////////////////
+
+type "w" to see everyone on the server 
+
+#//////////////////////////
+
+echo "Capture Attacks"
+
+tcpdump -w ~/Patch.dmp -c 100000 tcp port not 80
+
+#//////////////////////////
+
+echo "flush all in coming traffic"
+tcpdump -n -i any
+
+#//////////////////////////
+
+echo "see who's pinging you"
+tcpdump -a icmp
+
+#//////////////////////////
+
+echo "Filter Ports"
+iptables -A INPUT -p tcp --dport (PORT) -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+______ _           _    _       _ _     
+|  ___(_)         | |  | |     | | |    
+| |_   _ _ __ ___ | |  | | __ _| | |___ 
+|  _| | | '__/ _ \| |/\| |/ _` | | / __|
+| |   | | | |  __/\  /\  / (_| | | \__ \
+\_|   |_|_|  \___| \/  \/ \__,_|_|_|___/
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Checking Current Iptables"
+
+iptables -L -v
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Cleaning Current Firewall Rules"
+
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
+echo "Setting NAT/Mangle/Raw Tables"
+
+iptables -t nat -P PREROUTING ACCEPT
+iptables -t nat -P OUTPUT ACCEPT
+iptables -t nat -P POSTROUTING ACCEPT
+iptables -t mangle -P PREROUTING ACCEPT
+iptables -t mangle -P INPUT ACCEPT
+iptables -t mangle -P FORWARD ACCEPT
+iptables -t mangle -P OUTPUT ACCEPT
+iptables -t mangle -P POSTROUTING ACCEPT
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Reject Spoofed Packets"
+
+iptables -A INPUT -s 10.0.0.0/8 -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -i eth0 -s 127.0.0.0/8 -j DROP
+
+iptables -A INPUT -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -d 224.0.0.0/4 -j DROP
+iptables -A INPUT -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -d 240.0.0.0/5 -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 239.255.255.0/24 -j DROP
+iptables -A INPUT -d 255.255.255.255 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Drop All Invalid Packets"
+
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A FORWARD -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+iptables -t mangle -A PREROUTING -m conntrack --ctstate INVALID -j DROP
+iptables -t mangle -A PREROUTING -p tcp ! --syn -m conntrack --ctstate NEW -j DROP
+iptables -t mangle -A PREROUTING -p tcp -m conntrack --ctstate NEW -m tcpmss ! --mss 536:65535 -j DROP
+iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+iptables -A OUTPUT -m conntrack --ctstate INVALID -j DROP
+iptables -A FORWARD -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A FORWARD -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Block Spoofed Packets"
+
+iptables -t mangle -A PREROUTING -s 224.0.0.0/3 -j DROP
+iptables -t mangle -A PREROUTING -s 169.254.0.0/16 -j DROP
+iptables -t mangle -A PREROUTING -s 172.16.0.0/12 -j DROP
+iptables -t mangle -A PREROUTING -s 192.0.2.0/24 -j DROP
+iptables -t mangle -A PREROUTING -s 192.168.0.0/16 -j DROP
+iptables -t mangle -A PREROUTING -s 10.0.0.0/8 -j DROP
+iptables -t mangle -A PREROUTING -s 0.0.0.0/8 -j DROP
+iptables -t mangle -A PREROUTING -s 240.0.0.0/5 -j DROP
+iptables -t mangle -A PREROUTING -s 127.0.0.0/8 ! -i lo -j DROP
+iptables -A INPUT -s 10.0.0.0/8 -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -i eth0 -s 127.0.0.0/8 -j DROP
+iptables -A INPUT -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -d 224.0.0.0/4 -j DROP
+iptables -A INPUT -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -d 240.0.0.0/5 -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 239.255.255.0/24 -j DROP
+iptables -A INPUT -d 255.255.255.255 -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -s 127.0.0.0/8 -j DROP
+iptables -A INPUT -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -d 224.0.0.0/4 -j DROP
+iptables -A INPUT -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -d 240.0.0.0/5 -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 239.255.255.0/24 -j DROP
+iptables -A INPUT -d 255.255.255.255 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Block Packets With Bogus TCP Flags"
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags SYN,FIN SYN,FIN -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,RST FIN,RST -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,ACK FIN -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,URG URG -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,FIN FIN -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,PSH PSH -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL ALL -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL NONE -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL FIN,PSH,URG -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,FIN,PSH,URG -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp --dport 21 -s 192.168.1.0/24 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -s 192.168.1.0/24 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 10000 -s 192.168.1.0/24 -j ACCEPT
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN FIN,SYN -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags SYN,RST SYN,RST -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,RST FIN,RST -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,ACK FIN -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,URG URG -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,FIN FIN -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,PSH PSH -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL ALL -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL NONE -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL FIN,PSH,URG -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,FIN,PSH,URG -j DROP 
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Patching Dos Attacks"
+
+iptables -A INPUT -s 73.144.69.72 -j DROP
+
+iptables -A INPUT -s 104.24.100.100 -j DROP
+
+iptables -A INPUT -s 104.24.31.73 -j DROP
+
+iptables -A INPUT -s 159.89.89.88 -j DROP
+
+iptables -I INPUT -s 157.230.225.45 -j DROP
+
+iptables -I INPUT -s 118.24.236.219  -j DROP
+
+iptables -I INPUT -s 118.89.142.127  -j DROP
+
+iptables -I INPUT -s 182.100.67.15  -j DROP
+
+iptables -I INPUT -s 118.24.231.39  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 134.208.23.110  -j DROP
+
+iptables -I INPUT -s 213.111.35.160  -j DROP
+
+iptables -I INPUT -s 170.210.68.163  -j DROP
+
+iptables -I INPUT -s 209.141.50.57  -j DROP
+
+iptables -I INPUT -s 51.68.82.218  -j DROP
+
+iptables -I INPUT -s 73.34.124.146  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 118.24.236.219  -j DROP
+
+iptables -I INPUT -s 118.89.142.127  -j DROP
+
+iptables -I INPUT -s 182.100.67.15  -j DROP
+
+iptables -I INPUT -s 118.24.231.39  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 134.208.23.110  -j DROP
+
+iptables -I INPUT -s 213.111.35.160  -j DROP
+
+iptables -I INPUT -s 170.210.68.163  -j DROP
+
+iptables -I INPUT -s 209.141.50.57  -j DROP
+
+iptables -I INPUT -s 51.68.82.218  -j DROP
+
+iptables -I INPUT -s 73.34.124.146  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 51.77.227.246 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+echo "Applying Basic Dos / DDos Filters"
+iptables -A INPUT -s 73.144.69.72 -j DROP
+
+iptables -A INPUT -s 104.24.100.100 -j DROP
+
+iptables -A INPUT -s 104.24.31.73 -j DROP
+
+iptables -A INPUT -s 159.89.89.88 -j DROP
+
+iptables -I INPUT -s 157.230.225.45 -j DROP
+
+iptables -I INPUT -s 118.24.236.219  -j DROP
+
+iptables -I INPUT -s 118.89.142.127  -j DROP
+
+iptables -I INPUT -s 182.100.67.15  -j DROP
+
+iptables -I INPUT -s 118.24.231.39  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 134.208.23.110  -j DROP
+
+iptables -I INPUT -s 213.111.35.160  -j DROP
+
+iptables -I INPUT -s 170.210.68.163  -j DROP
+
+iptables -I INPUT -s 209.141.50.57  -j DROP
+
+iptables -I INPUT -s 51.68.82.218  -j DROP
+
+iptables -I INPUT -s 73.34.124.146  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 118.24.236.219  -j DROP
+
+iptables -I INPUT -s 118.89.142.127  -j DROP
+
+iptables -I INPUT -s 182.100.67.15  -j DROP
+
+iptables -I INPUT -s 118.24.231.39  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 134.208.23.110  -j DROP
+
+iptables -I INPUT -s 213.111.35.160  -j DROP
+
+iptables -I INPUT -s 170.210.68.163  -j DROP
+
+iptables -I INPUT -s 209.141.50.57  -j DROP
+
+iptables -I INPUT -s 51.68.82.218  -j DROP
+
+iptables -I INPUT -s 73.34.124.146  -j DROP
+
+iptables -I INPUT -s 207.154.206.212  -j DROP
+
+iptables -I INPUT -s 51.77.227.246 -j DROP
+
+echo "Block DOS - Ping of Death"
+
+iptables -A INPUT -p ICMP --icmp-type echo-request -m length --length 60:65535 -j ACCEPT
+
+
+
+echp "Block All Packets From IP's Ending In .0.0
+
+iptables -A INPUT -m u32 --u32 "12&0xFFFF=0" -j DROP
+
+
+
+echo "Block Source Split Packets"
+
+iptables -A INPUT -p udp -m u32 --u32 "26&0xFFFFFFFF=0xfeff" -j DROP
+
+
+
+echo "Block DOS - Teardrop"
+
+iptables -A INPUT -p UDP -f -j DROP
+
+
+
+echo "Block Random Size Attacks"
+
+iptables -A INPUT -p udp -m u32 --u32 "22&0xFFFF=0x0008" -j DROP
+
+
+
+echo "Attempts to Block STD Attacks"
+
+iptables -I INPUT -p udp -m udp -m string --hex-string "|7374640000000000|" --algo kmp --from 28 --to 29 -j DROP
+
+	
+
+echo "Block DDOS - Smurf"
+
+iptables -A INPUT -m pkttype --pkt-type broadcast -j DROP
+iptables -A INPUT -p ICMP --icmp-type echo-request -m pkttype --pkttype broadcast -j DROP
+iptables -A INPUT -p ICMP --icmp-type echo-request -m limit --limit 3/s -j ACCEPT
+iptables -A INPUT -p icmp -m icmp --icmp-type address-mask-request -j DROP
+iptables -A INPUT -p icmp -m icmp --icmp-type timestamp-request -j DROP
+iptables -A INPUT -p icmp -m icmp -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/second --limit-burst 2 -j ACCEPT
+
+
+
+echo "NTP"
+
+iptables -A INPUT -p udp --sport 123 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 123 -j ACCEPT
+
+
+
+echo "Block DDOS - UDP-flood (Pepsi)"
+
+iptables -A INPUT -p UDP --dport 7 -j DROP
+iptables -A INPUT -p UDP --dport 19 -j DROP
+iptables -A INPUT -p tcp -m connlimit --connlimit-above 80 -j REJECT --reject-with tcp-reset
+
+
+
+echo "DNS"
+
+iptables -A INPUT -i eth0 -p udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p udp --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+iptables -A INPUT -i eth0 -p tcp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+
+
+echo "Block DDOS - SMBnuke"
+
+iptables -A INPUT -p UDP --dport 135:139 -j DROP
+iptables -A INPUT -p TCP --dport 135:139 -j DROP
+
+
+
+echo "Block DDOS - Fraggle"
+
+iptables -A INPUT -p UDP -m pkttype --pkt-type broadcast -j DROP
+iptables -A INPUT -p UDP -m limit --limit 3/s -j ACCEPT
+
+
+
+echo "Block DDOS - Jolt"
+
+iptables -A INPUT -p ICMP -f -j DROP
+
+
+
+echo "Drop TS3 Booter Methods"
+
+iptables -A PREROUTING -t raw -p udp --dport 9987 -m string --hex-string '|fa163eb402096ac8|' --algo kmp -j DROP
+iptables -A PREROUTING -t raw -p udp --dport 9987 -m string --hex-string '|71f63813d5422309|' --algo kmp -j DROP
+
+
+
+echo "Block UDP Methode NTP"
+
+iptables -A INPUT -i lo -p udp --destination-port 123 -j DROP
+iptables -A INPUT -p udp --source-port 123:123 -m state --state ESTABLISHED -j DROP
+iptables -A INPUT -p UDP --dport 123:123 -j DROP
+iptables -A OUTPUT -p udp --dport 123 -j ACCEPT
+
+
+
+echo "BLOCK THE DEVIL"
+
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,RST FIN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags ACK,URG URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags PSH,ACK PSH -j DROP
+
+
+
+echo "Block All Packets Drom Ips Ending In 0.0"
+
+iptables -A INPUT -m u32 --u32 "12&0xFFFF=0" -j DROP
+
+
+
+echo "Stop Null Packets"
+
+iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+
+
+
+echo "Stop SYN-Flood Attacks"
+
+iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+
+iptables -A INPUT -p TCP --syn -m iplimit --iplimit-above 9 -j DROP
+
+
+
+echo "Stop XMAS Packets"
+
+iptables -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+
+
+
+echo "SSH Brute-Force Protection"
+
+iptables -A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -m recent --set
+iptables -A INPUT -p tcp --dport ssh -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 10 -j DROP
+
+
+echo "Block UDP"
+
+iptables -I INPUT -p udp --dport 16000:29000 -m string --to 75 --algo bm --string 'HTTP/1.1 200 OK' -j DROP
+
+iptables -I INPUT -p udp -m udp -m string --hex-string "|7374640000000000|" --algo kmp --from 28 --to 29 -j DROP
+
+iptables -A INPUT -p udp -m u32 --u32 "6&0xFF=0,2:5,7:16,18:255" -j DROP
+
+iptables -A INPUT -m u32 --u32 "12&0xFFFF=0xFFFF" -j DROP
+
+iptables -A INPUT -m u32 --u32 "28&0x00000FF0=0xFEDFFFFF" -j DROP
+
+iptables -A INPUT -m string --algo bm --from 28 --to 29 --string "farewell" -j DROP
+
+iptables -A INPUT -p udp -m u32 --u32 "28 & 0x00FF00FF = 0x00200020 && 32 & 0x00FF00FF = 0x00200020 && 36 & 0x00FF00FF = 0x00200020 && 40 & 0x00FF00FF = 0x00200020" -j DROP
+
+iptables -I INPUT -p udp -m udp -m string --hex-string "|53414d50|" --algo kmp --from 28 --to 29 -j DROP
+
+iptables -A PREROUTING -t raw -p udp --dport 9987 -m length --length 0:32 -j DROP
+
+iptables -A PREROUTING -t raw -p udp --dport 9987 -m length --length 2521:65535 -j DROP
+
+iptables -A PREROUTING -t raw -p udp --dport 9987 -m length --length 98 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Echo "Packet Checker"
+
+
+
+iptables -N CHECK1
+iptables -A CHECK1 -j DROP
+
+iptables -N CHECK1
+iptables -A INPUT -p udp -m length --length 20 -j CHECK1
+iptables -A CHECK1 -m recent --name longudp --rcheck 1 --hitcount 5 -j DROP
+iptables -A CHECK1 -m recent --name longudp --1350 -j RETURN
+
+
+iptables -N CHECK1
+iptables -A INPUT -p udp -m length --length 20 -j CHECK1
+iptables -A CHECK1 -m recent --name longudp --rcheck 1 --hitcount 5 -j DROP
+iptables -A CHECK1 -m recent --name longudp --1460 -j RETURN
+
+
+iptables -A INPUT -p all -m length --length 222
+iptables -A CHECK1 -j DROP
+iptables -N CHECK1
+iptables -A INPUT -p all -m length --length 222
+iptables -A CHECK1 -j DROP
+iptables -N CHECK1
+iptables -A INPUT -p all -m length --length 222
+iptables -A CHECK1 -j DROP
+iptables -N CHECK1
+iptables -A INPUT -p all -m length --length 222
+iptables -A CHECK1 -j DROP
+iptables -N CHECK1
+iptables: Chain already exists.
+iptables -A INPUT -p all -m length --length 222
+iptables -A INPUT -p all -m length --length 222
+iptables -A CHECK1 -j DROP
+iptables -N CHECK1
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Blocks People From Pinging Your Ovh"
+
+iptables -A INPUT -d (IP)/32 -p icmp -m icmp --icmp-type 8 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Blocks Most Port Scanners"
+
+iptables -A INPUT   -m recent --name portscan --rcheck --seconds 86400 -j DROP
+iptables -A FORWARD -m recent --name portscan --rcheck --seconds 86400 -j DROP
+iptables -A INPUT   -m recent --name portscan --remove
+iptables -A FORWARD -m recent --name portscan --remove
+iptables -A INPUT   -p tcp -m tcp --dport 139 -m recent --name portscan --set -j LOG --log-prefix "Portscan:"
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  _____      _       _               
+ |  __ \    | |     | |              
+ | |__) |_ _| |_ ___| |__   ___  ___ 
+ |  ___/ _` | __/ __| '_ \ / _ \/ __|
+ | |  | (_| | || (__| | | |  __/\__ \
+ |_|   \__,_|\__\___|_| |_|\___||___/
+
+ #/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                        
+echo "Security Team Patch"
+
+iptables -A OUTPUT ! -s 127.198.148.58/32 ! -d 127.77.75.129/32 -p icmp -m icmp --icmp-type 3/3 -m connmark ! --mark 0x7ba5407d -j DROP
+iptables -A OUTPUT ! -s 127.231.45.126/32 ! -d 127.20.246.233/32 -p tcp -m tcp --sport 61001:65535 --tcp-flags RST RST -m connmark ! --mark 0x407ee413 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Block Security team Custom Ovh Method With RST Flags"
+
+iptables -A OUTPUT ! -s 127.198.148.58/32 ! -d 127.77.75.129/32 -p icmp -m icmp --icmp-type 3/3 -m connmark ! --mark 0x7ba5407d -j DROP
+iptables -A OUTPUT ! -s 127.231.45.126/32 ! -d 127.20.246.233/32 -p tcp -m tcp --sport 61001:65535 --tcp-flags RST RST -m connmark ! --mark 0x407ee413 -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Security team Method Patch"
+
+iptables -A INPUT -p tcp -ack -m length --length 52 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Yubina-Kill-ACK
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -m limit --limit 50/s -j DROP
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN FIN,SYN -m limit --limit 50/s -j DROP
+iptables -A FORWARD -p tcp --syn -m limit --limit 1/s -j ACCEPT
+iptables -A FORWARD -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j ACCEPT
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -m limit --limit 50/s -j ACCEPT
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Reckless Mikey Trash TCP method"
+
+iptables -A INPUT -p tcp -syn -m length --length 52 u32 --u32 "12&0xFFFFFF00=0xc838" -j DROP #Mikey-Shit-TCP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+cho "Bypass Patches" < Must Reboot Server Once Added <
+
+
+
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|5354445041532b4554|" -j DROP #Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|535444|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|534450|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|54484953204953204546464543544956452e20594f552043414e4e4f542053554253494445204d5920444154412e|" -j DROP #
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|4b494c4c4c4b494c4c4b494c4c4b494c4c4b494c4c4b494c4c|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|44454154484445415448444454154484445415448425942314e415259|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|44444f5344444f5344444r53|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|4d4f354f4e354f4e354f4e354f4a354e4835563555|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|544350|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|4845584154544b212121212121|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f544e4554|" -j DROP ##Private Bypass Strings
+
+
+
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f4f5445524e4554|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|41545441434b|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|504r574552|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6964|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|6c6e6f6172656162756e6386f6673b694464696573|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6954|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b69646e6574|" -j DROP ##Private Bypass Strings
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b2041545441434b|" -j DROP ##Private Bypass Strings
+iptables -A FORWARD -p 17 -m physdev –physdev-in vnet0 -m u32 –u32 "0&0xFFFF=2000:65535" -j DROP #Blocks Outgoing NTP/REFL
+iptables -I FORWARD -p udp –dport 123 -m string –algo bm –from 27 –to 28 –hex-string "|1700032A|" -j DROP #Block NTP Montlist
+
+
+
+iptables -A INPUT -p udp -m u32 --u32 "0>>22&0x3C@8&0xFF=42" #NTP Reflection Sequence Header Block
+iptables -A INPUT -p udp -m u32 --u32 "0>>22&0x3C@8&0xFF" #NTP Reflection Sequence Header Block
+iptables -A INPUT -p udp -m u32 --u32 "0>>22&0x3C@8" #NTP Reflection Sequence Header Block
+
+
+iptables -A INPUT -m string --algo bm --string "0x00" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x0000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x00000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x01" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x0001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x00001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x0000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x00000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x0000000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x00000000001" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000000000001" -j DROP  
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF0" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF00" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF0000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF00000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF0000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF00000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF000000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF0000000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF00000000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF000000000000" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF0000000000000" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xFA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAAA" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAAAA" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFFFF" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF1" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1F" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFFFF" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF2" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2F" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFFFF" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF3" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3F" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFFFF" -j DROP
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF4" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4F" -j DROP
+iptables -A INPUT -m string --algo bm --string "0xF4FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFF" -j DROP
+iptables -A INPUT -m string --algo bm --string "0xF4FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFFFF" -j DROP
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF5" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5F" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFF" -j DROP
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFFFF" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xfe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffffffe" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffffffe" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0x000F" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFFF" -j DROP 
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFFFF" -j DROP 
+
+
+
+iptables -A INPUT -m string --algo bm --string "0x00" -j DROP #BSSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000" -j DROP #BSSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x0000" -j DROP #BSSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x00000" -j DROP #BSSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x01" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x0001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x00001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x0000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x00000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x0000000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x00000000001" -j DROP #BSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000000000001" -j DROP #BSTD Bypass Strings
+
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF0" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF00" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF0000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF00000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF0000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF00000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF000000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF0000000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF00000000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF000000000000" -j DROP #NSTD Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF0000000000000" -j DROP #NSTD Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xFFFFFFFFFFFFFFFF" -j DROP #Crunch Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF1" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1F" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFFF" -j DROP #0xF1 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF1FFFFFFFFFFFFFF" -j DROP #0xF1 Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF2" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2F" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFFF" -j DROP #0xF2 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF2FFFFFFFFFFFFFF" -j DROP #0xF2 Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF3" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3F" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFFF" -j DROP #0xF3 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF3FFFFFFFFFFFFFF" -j DROP #0xF3 Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF4" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4F" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFFF" -j DROP #0xF4 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF4FFFFFFFFFFFFFF" -j DROP #0xF4 Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xF5" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5F" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFFF" -j DROP #0xF5 Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xF5FFFFFFFFFFFFFF" -j DROP #0xF5 Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0xfe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xfffffffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0xffffffffffffffffe" -j DROP #OVH-Dropper Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0x000F" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000FFFFFFFFFFFFFFF" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x0f" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x00f" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000f" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffffffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffffffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000ffffffffffffff" -j DROP #IPsLap Bypass Strings
+iptables -A INPUT -m string --algo bm --string "0x000fffffffffffffff" -j DROP #IPsLap Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "1xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "1xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "2xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "2xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "3xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "3xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "4xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "4xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "5xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "6xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "6xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "7xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "7xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "8xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "8xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "9xFA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "9xFAAAAAAAAAAAAAA" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood11" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood11111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood11111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood11111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood111111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1111111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood11111111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood111111111111111" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood1111111111111111" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood22" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood22222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood22222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood22222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood222222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2222222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood22222222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood222222222222222" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood2222222222222222" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood33" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood33333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood33333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood33333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood333333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3333333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood33333333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood333333333333333" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood3333333333333333" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood44" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood44444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood44444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood44444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood444444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4444444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood44444444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood444444444444444" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood4444444444444444" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood55" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood55555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood55555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood55555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood555555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5555555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood55555555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood555555555555555" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood5555555555555555" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood66" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood66666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood66666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood66666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood666666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6666666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood66666666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood666666666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood6666666666666666" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood77" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood77777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood77777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood77777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood777777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7777777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood77777777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood777777777777777" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood7777777777777777" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood88" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood88888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood88888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood88888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood888888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8888888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood88888888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood888888888888888" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood8888888888888888" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "flood" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood99" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood99999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood99999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood99999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood999999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9999999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood99999999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood999999999999999" -j DROP #Flood Bypass Strings
+iptables -A INPUT -m string --algo bm --string "flood9999999999999999" -j DROP #Flood Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "SAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "SAAAAAAAAAAAAAAM" -j DROP #SAAM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "5M" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAM" -j DROP #5AM Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAAM" -j DROP #5AM Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "5M" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAT" -j DROP #5AT Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAAT" -j DROP #5AT Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "5M" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAF" -j DROP #5AF Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAAF" -j DROP #5AF Bypass Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "5M" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAP" -j DROP #5AP Bypass Strings
+iptables -A INPUT -m string --algo bm --string "5AAAAAAAAAAAAAP" -j DROP #5AP Bypass Strings
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Alpha Numratic Patches"
+
+iptables -A INPUT -m string --algo bm --string "1" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "12" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "123" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1234" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "12345" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "123456" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1234567" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "12345678" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "123456789" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "12345678910" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1234567891011" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "123456789101112" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "12345678910111213" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1234567891011121314" -j DROP #Numerical Strings
+iptables -A INPUT -m string --algo bm --string "123456789101112131415" -j DROP #Numerical Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "0A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "2A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "3A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "4A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "5A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "6A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "7A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "8A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "9A" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "0AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "2AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "3AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "4AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "5AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "6AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "7AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "8AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "9AA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "0AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "1AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "2AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "3AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "4AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "5AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "6AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "7AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "8AAA" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "9AAA" -j DROP #Alpha/Numerical Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "CRI" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "STD" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "std" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "SAAM" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "ddos" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "DDOS" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "Ddos" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "DDoS" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "ddoS" -j DROP #Alpha/Numerical Strings
+iptables -A INPUT -m string --algo bm --string "udpflood" -j DROP #Alpha/Numerical Strings
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Botnet Attack Filters"
+
+iptables -t raw -A PREROUTING -p udp -m length --length 65535 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-65535 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 60000 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-60000 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 30000 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-30000 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 10000 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-10000 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 4096 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-4096 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 1052 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-1052 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 1000 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-1052 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 912 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-912 packets/4
+iptables -t raw -A PREROUTING -p udp -m length --length 540 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-540 packets/3
+iptables -t raw -A PREROUTING -p udp -m length --length 55 -j DROP #Malicious Botnet-UDP Payload / a UDP flood of length-55 packets/1
+iptables -t raw -A PREROUTING -p udp -m length --length 38 -j DROP #Malicious Botnet-UDP Payload / UDP flood/37
+iptables -A PREROUTING -p udp -m length --length 0:28 -j DROP #Dropping Empty UDP Packets / Deemed Illegitimate Packets
+iptables -A INPUT -p udp -m u32 --u32 "2&0xFFFF=0x2:0x0100" #Generic-UDP-Header-Sequence
+iptables -A INPUT -p udp -m u32 --u32 "12&0xFFFFFF00=0xC0A80F00" -j DROP #Katura-UDP-Payload
+iptables -A INPUT -p tcp -syn -m length --length 52 u32 --u32 "12&0xFFFFFF00=0xc838" -j DROP #Mikey-Shit-TCP
+iptables -A INPUT -p udp -m length --length 28 -m string --algo bm --string "0x0010" -j DROP #Botnet UDP
+iptables -A INPUT -p udp -m length --length 28 -m string --algo bm --string "0x0000" -j DROP #Botnet UDP
+iptables -A INPUT -p tcp -m length --length 40 -m string --algo bm --string "0x0020" -j DROP #Botnet TCP
+iptables -A INPUT -p tcp -m length --length 40 -m string --algo bm --string "0x0c54" -j DROP #Botnet TCP
+iptables -A INPUT -p tcp -m length --length 40 -m string --algo bm --string "0x38d3" -j DROP #Botnet TCP
+iptables -A INPUT -p tcp -ack -m length --length 52 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Yubina-Kill-ACK
+iptables -A INPUT -p tcp -syn -m length --length 52 -m string --algo bm --string "0xc838" -m state --state ESTABLISHED  -j DROP 
+
+
+#Reckless-Mikey-Shit-TCp
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Yubina-RST
+iptables -A INPUT -p tcp -ack -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -syn -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -fin -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -psh -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -ack -m length --length 40 -m string --algo bm --string "0x38d3" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0x38d3" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -syn -m length --length 40 -m string --algo bm --string "0x38d3" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -fin -m length --length 40 -m string --algo bm --string "0x38d3" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -psh -m length --length 40 -m string --algo bm --string "0x38d3" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -ack -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -syn -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -fin -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -psh -m length --length 40 -m string --algo bm --string "0x0c54" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -ack -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -syn -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -fin -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -psh -m length --length 40 -m string --algo bm --string "0xd3da" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -ack -m length --length 40 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -rst -m length --length 40 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -syn -m length --length 40 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -fin -m length --length 40 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Random-TCP
+iptables -A INPUT -p tcp -psh -m length --length 40 -m string --algo bm --string "0x912e" -m state --state ESTABLISHED  -j DROP #Random-TCP
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Long-INT"
+
+iptables -A INPUT -m string --algo bm --string "" -j DROP #Empty Long IT/STR/PL
+iptables -A INPUT -m string --algo bm --string "U" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+iptables -A INPUT -m string --algo bm --string "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU" -j DROP #SAO-UDP Strings
+
+
+
+iptables -A INPUT -m string --algo bm --string "\x77" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A\xEF\xFB" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A\xEF\xFB\xDE\xB6" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A\xEF\xFB\xDE\xB6\xB1\x94" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A\xEF\xFB\xDE\xB6\xB1\x94\xD6" -j DROP #OVH-SMACK Bypass Strings/
+iptables -A INPUT -m string --algo bm --string "\x77\x47\x5E\x27\x7A\x4E\x09\xF7\xC7\xC0\xE6\xF5\x9B\xDC\x23\x6E\x12\x29\x25\x1D\x0A\xEF\xFB\xDE\xB6\xB1\x94\xD6\x7A\x6B" -j DROP #OVH-SMACK Bypass Strings/
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+echo "Saving Ip Tables"
+
+/sbin/iptables-save
+
+echo "Rebooting Server"
+
+echo -e
+
+sleep 3
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ______ ____ _____ _       _    _                                          _        _____ _____  _        _     _           
+ |  ____|  _ \_   _( )     | |  | |                                        | |      |_   _|  __ \| |      | |   | |          
+ | |__  | |_) || | |/ ___  | |__| | ___  _ __ ___   ___ _ __ ___   __ _  __| | ___    | | | |__) | |_ __ _| |__ | | ___  ___ 
+ |  __| |  _ < | |   / __| |  __  |/ _ \| '_ ` _ \ / _ \ '_ ` _ \ / _` |/ _` |/ _ \   | | |  ___/| __/ _` | '_ \| |/ _ \/ __|
+ | |    | |_) || |_  \__ \ | |  | | (_) | | | | | |  __/ | | | | | (_| | (_| |  __/  _| |_| |    | || (_| | |_) | |  __/\__ \
+ |_|    |____/_____| |___/ |_|  |_|\___/|_| |_| |_|\___|_| |_| |_|\__,_|\__,_|\___| |_____|_|     \__\__,_|_.__/|_|\___||___/
+
+              -note use at your own risk
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                                                                                                             
+Echo "Making All Spooky Packets Go To Google So They Can Deal With It Not Government VPN"
+
+iptables -t mangle -A PREROUTING -s 8.8.8.8 -d 8.8.8.8
+
+
+
+echo "Making Ports More Spookey"
+
+iptables -A INPUT -p tcp -m multiport --destination-ports 100:60000 -j DROP
+
+
+
+Echo "Trying To Stop Skids Attacks"
+
+iptables -A INPUT -p tcp --dport 80 -m limit --limit 25/minute --limit-burst 100 -j ACCEPT
+
+#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Fire Walls
+----------------------------------------------------------------------------------------
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|5354445041434b4554|" -j DROP
+  iptables -A INPUT -m u32 --u32 "28&0x00000FF0=0xFEDFFFFF" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|535444|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|554450|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|54484953204953204546464543544956452e20594f552043414e4e4f542053554253494445204d5920444154412e|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4b494c4c4b494c4c4b494c4c4b494c4c4b494c4c4b494c4c|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4445415448444541544844454154484445415448425942314e415259|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|44444f5344444f5344444f53|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4d4f354f4e354f4e354f4e354f4a354e4835563555|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|544350|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4845584154544b212121212121|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f544e4554|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f4f5445524e4554|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|41545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|504f574552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|6c6e6f6172656162756e63686f66736b696464696573|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6964|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b69646e6574|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b2041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b20464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|484f4c442041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|534554484946594f554445434f4445544849534f4e45594f554152455355434841464147484548454845|" -j DROP # hehehe
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e43|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e432041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e4320464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b4552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b|" -j DROP
+iptables -A INPUT -m u32 --u32 "12&0xFFFF=0xFFFF" -j DROP
+  iptables -A INPUT -m string --algo bm --from 28 --to 29 --string "farewell" -j DROP
+  iptables -I INPUT -p tcp -m tcp -m string --hex-string "|000000005010|" --algo kmp --from 28 --to 29 -m length --length 40 -j DROP
+  iptables -I INPUT -p udp -m udp -m string --hex-string "|53414d50|" --algo kmp --from 28 --to 29 -j DROP
+  iptables -A INPUT -p udp -m udp -m string --algo bm --from 32 --to 33 --string "AAAAAAAAAAAAAAAA" -j DROP
+  iptables -A INPUT -m string --algo bm --from 32 --to 33 --string "q00000000000000" -j DROP
+  iptables -A INPUT -m string --algo bm --from 32 --to 33 --string "statusResponse" -j DROP #SSDP Flood I have seen recently its a patch for it even though OVH picks most the traffic up 
+  iptables -A INPUT -p udp -m length --length 1025 -j DROP
+  iptables -A INPUT -p udp --dport 61327 -j DROP 
+iptables -A INPUT -p icmp --fragment -j DROP
+  iptables -A OUTPUT -p icmp --fragment -j DROP
+  iptables -A FORWARD -p icmp --fragment -j DROP
+iptables -A INPUT -p udp --source-port 123:123 -m state --state ESTABLISHED -j DROP #NTP ISSUE FIX
+---------------------------------------------------------------------------------------------------
+
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -A INPUT -p udp --dport 9987 -j ACCEPT
+iptables -A INPUT -p udp --sport 9987 -j ACCEPT
+iptables -A INPUT -p udp --dport 9988 -j ACCEPT
+iptables -A INPUT -p udp --sport 9988 -j ACCEPT
+iptables -A INPUT -p tcp --dport 30033 -j ACCEPT
+iptables -A INPUT -p tcp --sport 30033 -j ACCEPT
+iptables -A INPUT -p tcp --dport 10011 -j ACCEPT
+iptables -A INPUT -p tcp --sport 10011 -j ACCEPT
+iptables -A INPUT -p tcp --dport 41144 -j ACCEPT
+iptables -A INPUT -p tcp --sport 41144 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2010 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2010 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2011 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2011 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2008 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2008 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --sport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8087 -j ACCEPT
+iptables -A INPUT -p tcp --sport 8087 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp --sport 443 -j ACCEPT
+iptables -A INPUT -p tcp --dport 21 -j ACCEPT
+iptables -A INPUT -p tcp --sport 21 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --sport 22 -j ACCEPT
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p udp --sport 53 -j ACCEPT
+iptables -A OUTPUT -p udp -d weblist.teamspeak.com --dport 2010 -j ACCEPT
+iptables -A OUTPUT -p tcp -d accounting.teamspeak.com --dport 2008 -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -I INPUT -s 109.51.48.210 -j DROP
+iptables -A INPUT -p icmp --icmp-type echo-request -j REJECT
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags PSH,ACK PSH -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags ACK,URG URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,RST FIN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
+iptables -A INPUT -f -j DROP
+iptables -A INPUT -p udp -m udp --sport 19 -j DROP
+iptables -A INPUT -p udp -m udp --sport 123 -j DROP
+iptables -A INPUT -p udp -m udp --sport 161 -j DROP
+iptables -A INPUT -p udp -m udp --sport 1433 -j DROP
+iptables -A INPUT -p udp -m udp --sport 1900 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27015 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27950 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27952 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27960 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27965 -j DROP
+iptables -A INPUT -p icmp -j DROP
+iptables -A INPUT -p udp -m udp --sport 19329 -j DROP
+iptables -A INPUT -p udp -m udp --sport 53 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 53 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 19329 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 5353 -j DROP
+iptables -A INPUT -p udp -m udp --sport 5353 -j DROP
+iptables -A INPUT -p udp -m udp --sport 7143 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 7143 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 123 -j DROP
+iptables -A INPUT -p udp -m udp --sport 123 -j DROP
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -j DROP
+iptables -N syn-flood
+iptables -A syn-flood -m limit --limit 10/sec --limit-burst 15 -j RETURN
+iptables -A syn-flood -j LOG --log-prefix "SYN flood: "
+iptables -A syn-flood -j DROP
+iptables-save > /etc/iptables/rules.v4
+iptables-save > $HOME/firewall.txt
+
+
+
+iptables -N f2b-sshd
+iptables -A INPUT -p tcp -m multiport --dports 22 -j f2b-sshd
+iptables -A f2b-sshd -j RETURN
+iptables -N RELATED_ICMP
+iptables -A RELATED_ICMP -p icmp --icmp-type destination-unreachable -j ACCEPT
+iptables -A RELATED_ICMP -p icmp --icmp-type time-exceeded -j ACCEPT
+iptables -A RELATED_ICMP -p icmp --icmp-type parameter-problem -j ACCEPT
+iptables -A RELATED_ICMP -j DROP
+iptables -A INPUT -s 10.0.0.0/8 -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -i eth0 -s 127.0.0.0/8 -j DROP
+iptables -A INPUT -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -d 224.0.0.0/4 -j DROP
+iptables -A INPUT -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -d 240.0.0.0/5 -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 0.0.0.0/8 -j DROP
+iptables -A INPUT -d 239.255.255.0/24 -j DROP
+iptables -A INPUT -d 255.255.255.255 -j DROP
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A FORWARD -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+iptables -t mangle -A PREROUTING -m conntrack --ctstate INVALID -j DROP
+iptables -t mangle -A PREROUTING -p tcp ! --syn -m conntrack --ctstate NEW -j DROP
+iptables -t mangle -A PREROUTING -p tcp -m conntrack --ctstate NEW -m tcpmss ! --mss 536:65535 -j DROP
+iptables -A INPUT       -m conntrack --ctstate INVALID -j DROP
+iptables -A OUTPUT      -m conntrack --ctstate INVALID -j DROP
+iptables -A FORWARD     -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A FORWARD -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+echo <"Block Pinging Inside And Out Side"<
+echo "Dropping all fragmented ICMP packets"
+iptables -A INPUT -p icmp --fragment -j DROP
+iptables -A OUTPUT -p icmp --fragment -j DROP
+iptables -A FORWARD -p icmp --fragment -j DROP
+iptables -A INPUT -p icmp -j DROP
+iptables -A OUTPUT -p icmp -j DROP
+iptables -A FORWARD -p icmp -j DROPiptables -A INPUT -p icmp -j DROP
+iptables -A OUTPUT -p icmp -j DROP
+iptables -A FORWARD -p icmp -j DROP
+iptables -A INPUT -p icmp -j DROP
+echo Block Port Scaning
+apt-get install ipset
+ipset create port_scanners hash:ip family inet hashsize 32768 maxelem 65536 timeout 600
+ipset create scanned_ports hash:ip,port family inet hashsize 32768 maxelem 65536 timeout 60
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A INPUT -m state --state NEW -m set ! --match-set scanned_ports src,dst -m hashlimit --hashlimit-above 1/hour --hashlimit-burst 5 --hashlimit-mode srcip --hashlimit-name portscan --hashlimit-htable-expire 10000 -j SET --add-set port_scanners src --exist
+iptables -A INPUT -m state --state NEW -m set --match-set port_scanners src -j DROP
+iptables -A INPUT -m state --state NEW -j SET --add-set scanned_ports src,dst
+echo "Block DOS - Teardrop"
+iptables -A INPUT -p UDP -f -j DROP
+echo "Block DDOS - Smurf"
+iptables -A INPUT -m pkttype --pkt-type broadcast -j DROP
+iptables -A INPUT -p ICMP --icmp-type echo-request -m pkttype --pkttype broadcast -j DROP
+iptables -A INPUT -p ICMP --icmp-type echo-request -m limit --limit 3/s -j ACCEPT
+iptables -A INPUT -p icmp -m icmp --icmp-type address-mask-request -j DROP
+iptables -A INPUT -p icmp -m icmp --icmp-type timestamp-request -j DROP
+iptables -A INPUT -p icmp -m icmp -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/second --limit-burst 2 -j ACCEPT
+echo "NTP"
+iptables -A INPUT -p udp --sport 123 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 123 -j ACCEPT
+echo "Block DDOS - UDP-flood (Pepsi)"
+iptables -A INPUT -p UDP --dport 7 -j DROP
+iptables -A INPUT -p UDP --dport 19 -j DROP
+iptables -A INPUT -p tcp -m connlimit --connlimit-above 80 -j REJECT --reject-with tcp-reset
+echo "DNS"
+iptables -A INPUT -i eth0 -p udp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p udp --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --sport 53 -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+---------------------------------------------------------------------------------------------
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|5354445041434b4554|" -j DROP
+  iptables -A INPUT -m u32 --u32 "28&0x00000FF0=0xFEDFFFFF" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|535444|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|554450|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|54484953204953204546464543544956452e20594f552043414e4e4f542053554253494445204d5920444154412e|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4b494c4c4b494c4c4b494c4c4b494c4c4b494c4c4b494c4c|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4445415448444541544844454154484445415448425942314e415259|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|44444f5344444f5344444f53|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4d4f354f4e354f4e354f4e354f4a354e4835563555|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|544350|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4845584154544b212121212121|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f544e4554|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|424f4f5445524e4554|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|41545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|504f574552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|6c6e6f6172656162756e63686f66736b696464696573|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6964|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b69646e6574|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b2041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b20464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|484f4c442041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|534554484946594f554445434f4445544849534f4e45594f554152455355434841464147484548454845|" -j DROP # 
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e43|" -j DROP
+
+apt-get install ipset
+
+ipset create port_scanners hash:ip family inet hashsize 32768 maxelem 65536 timeout 600
+ipset create scanned_ports hash:ip,port family inet hashsize 32768 maxelem 65536 timeout 60
+
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A INPUT -m state --state NEW -m set ! --match-set scanned_ports src,dst -m hashlimit --hashlimit-above 1/hour --hashlimit-burst 5 --hashlimit-mode srcip --hashlimit-name portscan --hashlimit-htable-expire 10000 -j SET --add-set port_scanners src --exist
+iptables -A INPUT -m state --state NEW -m set --match-set port_scanners src -j DROP
+
+iptables -t filter -A INPUT -p icmp -j DROP
+iptables -t filter -A OUTPUT -p icmp -j DROP
+
+iptables -A INPUT -s 10.0.0.0/8 -j DROP
+
+iptables -A INPUT -s 169.254.0.0/16 -j DROP
+
+iptables -A INPUT -s 172.16.0.0/12 -j DROP
+
+iptables -A INPUT -s 127.0.0.0/8 -j DROP
+
+
+
+iptables -A INPUT -s 224.0.0.0/4 -j DROP
+
+iptables -A INPUT -d 224.0.0.0/4 -j DROP
+
+iptables -A INPUT -s 240.0.0.0/5 -j DROP
+
+iptables -A INPUT -d 240.0.0.0/5 -j DROP
+
+iptables -A INPUT -s 0.0.0.0/8 -j DROP
+
+iptables -A INPUT -d 0.0.0.0/8 -j DROP
+
+iptables -A INPUT -d 239.255.255.0/24 -j DROP
+
+iptables -A INPUT -d 255.255.255.255 -j DROP
+
+iptables -A INPUT -m state --state INVALID -j DROP
+
+iptables -A FORWARD -m state --state INVALID -j DROP
+
+iptables -A OUTPUT -m state --state INVALID -j DROP
+
+iptables -A INPUT -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/second --limit-burst 2 -j ACCEPT
+
+iptables -A INPUT   -m recent --name portscan --rcheck --seconds 86400 -j DROP
+
+iptables -A FORWARD -m recent --name portscan --rcheck --seconds 86400 -j DROP
+
+iptables -A INPUT   -m recent --name portscan --remove
+
+iptables -A FORWARD -m recent --name portscan --remove
+
+iptables -A INPUT   -p tcp -m tcp --dport 139 -m recent --name portscan --set -j LOG --log-prefix "Portscan:"
+
+iptables -A INPUT   -p tcp -m tcp --dport 139 -m recent --name portscan --set -j DROP
+
+
+
+iptables -A FORWARD -p tcp -m tcp --dport 139 -m recent --name portscan --set -j LOG --log-prefix "Portscan:"
+
+iptables -A FORWARD -p tcp -m tcp --dport 139 -m recent --name portscan --set -j DROP
+
+iptables -A INPUT -m state --state INVALID -j DROP
+
+iptables -A FORWARD -m state --state INVALID -j DROP
+
+iptables -A OUTPUT -m state --state INVALID -j DROP
+
+
+iptables -N http-flood
+
+iptables -A INPUT -p tcp --syn --dport 80 -m connlimit --connlimit-above 1 -j http-flood
+
+iptables -A INPUT -p tcp --syn --dport 443 -m connlimit --connlimit-above 1 -j http-flood
+
+iptables -A http-flood -m limit --limit 10/s --limit-burst 10 -j RETURN
+
+iptables -A http-flood -m limit --limit 1/s --limit-burst 10 -j LOG --log-prefix "HTTP-FLOOD "
+
+iptables -A http-flood -j DROP
+
+
+iptables -A INPUT -p tcp --syn --dport 80 -m connlimit --connlimit-above 20 -j DROP
+
+iptables -A INPUT -p tcp --syn --dport 443 -m connlimit --connlimit-above 20 -j DROP
+
+iptables -A INPUT -p tcp --dport 80 -i eth0 -m state --state NEW -m recent --set
+
+iptables -I INPUT -p tcp --dport 80 -m state --state NEW -m recent --update --seconds 10 --hitcount 20 -j DROP
+
+iptables -A INPUT -p tcp --dport 443 -i eth0 -m state --state NEW -m recent --set
+
+iptables -I INPUT -p tcp --dport 443 -m state --state NEW -m recent --update --seconds 10 --hitcount 20 -j DROP
+
+iptables -A INPUT -p tcp --syn -m limit --limit 10/s --limit-burst 13 -j DROP
+
+iptables -N flood
+
+iptables -A flood -j LOG --log-prefix "FLOOD "
+
+iptables -A flood -j DROP
+
+
+iptables -t filter -N syn-flood
+
+iptables -t filter -A INPUT -i eth0 -p tcp --syn -j syn-flood
+
+iptables -t filter -A syn-flood -m limit --limit 1/sec --limit-burst 4 -j RETURN
+
+iptables -t filter -A syn-flood -j LOG \
+
+--log-prefix "IPTABLES SYN-FLOOD:"
+
+iptables -t filter -A syn-flood -j DROP
+
+
+iptables -t mangle -A PREROUTING -m conntrack --ctstate INVALID -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags SYN,RST SYN,RST -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,RST FIN,RST -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags FIN,ACK FIN -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,URG URG -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,FIN FIN -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ACK,PSH PSH -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL ALL -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL NONE -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL FIN,PSH,URG -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,FIN,PSH,URG -j DROP
+
+iptables -t mangle -A PREROUTING -p tcp --tcp-flags ALL SYN,RST,ACK,FIN,URG -j DROP
+
+iptables -t mangle -A PREROUTING -p icmp -j DROP
+
+iptables -A INPUT -p tcp -m connlimit --connlimit-above 80 -j REJECT --reject-with tcp-reset
+
+iptables -A INPUT -p tcp -m conntrack --ctstate NEW -m limit --limit 60/s --limit-burst 20 -j ACCEPT
+
+iptables -A INPUT -p tcp -m conntrack --ctstate NEW -j DROP
+
+iptables -t mangle -A PREROUTING -f -j DROP
+
+iptables -A INPUT -p tcp --tcp-flags RST RST -m limit --limit 2/s --limit-burst 2 -j ACCEPT
+
+iptables -A INPUT -p tcp --tcp-flags RST RST -j DROP
+
+iptables -N port-scanning
+
+iptables -A port-scanning -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s --limit-burst 2 -j RETURN
+
+iptables -A port-scanning -j DROP
+
+
+
+iptables -A INPUT -m state --state NEW -j SET --add-set scanned_ports src,dst
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e432041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e4320464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b4552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b|" -j DROP
+iptables -A INPUT -m u32 --u32 "12&0xFFFF=0xFFFF" -j DROP
+  iptables -A INPUT -m string --algo bm --from 28 --to 29 --string "farewell" -j DROP
+  iptables -I INPUT -p tcp -m tcp -m string --hex-string "|000000005010|" --algo kmp --from 28 --to 29 -m length --length 40 -j DROP
+  iptables -I INPUT -p udp -m udp -m string --hex-string "|53414d50|" --algo kmp --from 28 --to 29 -j DROP
+  iptables -A INPUT -p udp -m udp -m string --algo bm --from 32 --to 33 --string "AAAAAAAAAAAAAAAA" -j DROP
+  iptables -A INPUT -m string --algo bm --from 32 --to 33 --string "q00000000000000" -j DROP
+  iptables -A INPUT -m string --algo bm --from 32 --to 33 --string "statusResponse" -j DROP #SSDP Flood I have seen recently its a patch for it even though OVH picks most the traffic up 
+  iptables -A INPUT -p udp -m length --length 1025 -j DROP
+  iptables -A INPUT -p udp --dport 61327 -j DROP 
+iptables -A INPUT -p icmp --fragment -j DROP
+  iptables -A OUTPUT -p icmp --fragment -j DROP
+  iptables -A FORWARD -p icmp --fragment -j DROP
+iptables -A INPUT -p udp --source-port 123:123 -m state --state ESTABLISHED -j DROP #NTP ISSUE FIX
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6964|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b69646e6574|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b2041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b20464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|484f4c442041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|534554484946594f554445434f4445544849534f4e45594f554152455355434841464147484548454845|" -j DROP # 
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e43js9273sjks|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e432041545441434bjsobdisbs|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e4320464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b4552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b|" -j DROP
+iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b6964|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|736b69646e6574|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b2041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4a554e4b20464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|484f4c442041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|534554484946594f554445434f4445544849534f4e45594f554152455355434841464147484548454845|" -j DROP # 
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e43|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e432ee92041545441434b|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|434e4320464c4f4f44|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b4552|" -j DROP
+  iptables -A INPUT -p udp -m string --algo bm --hex-string "|4841434b|" -j DROP
+------------------------------------------------------------------------------------------------------------------
+iptables -A INPUT -m string --hex-string "|efbbbf30783030303230303031|" --algo bm --to 65535 -j DROP
+iptables -A INPUT -m string --hex-string "|efbbbf307830303030303030303030433032313130|" --algo bm --to 65535 -j DROP
+iptables -A INPUT -m string --hex-string "|efbbbfefbbbf307830303030303030303030433032313130|" --algo bm --to 65535 -j DROP
+iptables -A INPUT -m string --hex-string "|efbbbfefbbbfefbbbf30783030363030453030|" --algo bm --to 65535 -j DROP
+iptables -A INPUT -m string --hex-string "|efbbbfefbbbfefbbbfefbbbf30783030363030453038|" --algo bm --to 65535 -j DROP
+iptables -A INPUT -m string --hex-string "|efbbbfefbbbfefbbbfefbbbfefbbbf30783030303230303031|" --algo bm --to 65535 -j DROP
+-----------------------------------------------------------------------------------------------------------------------------------
+iptables -A INPUT -p udp -m multiport --dports 135,137,138,139,445,1433,1434 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 135,137,138,139,445,1433,1434 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 135,137,138,139,445,1433,1434 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 135,137,138,139,445,1433,1434 -j DROP 
+iptables -A INPUT -p udp -m multiport --dports 853,4433,4740,5349,5684,5868,6514,6636,8232,10161 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 853,4433,4740,5349,5684,5868,6514,6636,8232,10161 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 853,4433,4740,5349,5684,5868,6514,6636,8232,10161 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 853,4433,4740,5349,5684,5868,6514,6636,8232,10161 -j DROP
+iptables -A INPUT -p udp -m multiport --dports 10162,12346,12446,12546,12646,12746,12846,12946,13046 -j DROP 
+iptables -A INPUT -p tcp -m multiport --dports 10162,12346,12446,12546,12646,12746,12846,12946,13046 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 10162,12346,12446,12546,12646,12746,12846,12946,13046 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 10162,12346,12446,12546,12646,12746,12846,12946,13046 -j DROP
+iptables -A INPUT -p udp -m multiport --dports 1645,1812,2049,3283,2302,6481,17185,26000,26001,26002 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 1645,1812,2049,3283,2302,6481,17185,26000,26001,26002 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 1645,1812,2049,3283,2302,6481,17185,26000,26001,26002 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 1645,1812,2049,3283,2302,6481,17185,26000,26001,26002 -j DROP
+iptables -A INPUT -p udp -m multiport --dports 26003,26004,27960,27961,27962,27963,27964,30720,30721 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 26003,26004,27960,27961,27962,27963,27964,30720,30721 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 26003,26004,27960,27961,27962,27963,27964,30720,30721 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 26003,26004,27960,27961,27962,27963,27964,30720,30721 -j DROP
+iptables -A INPUT -p udp -m multiport --dports 30722,30723,30724,44400,3784,64378,8767,11211,1645,1812,520 -j DROP
+iptables -A INPUT -p tcp -m multiport --dports 30722,30723,30724,44400,3784,64378,8767,11211,1645,1812,520 -j DROP
+iptables -A INPUT -p udp -m multiport --sports 30722,30723,30724,44400,3784,64378,8767,11211,1645,1812,520 -j DROP
+iptables -A INPUT -p tcp -m multiport --sports 30722,30723,30724,44400,3784,64378,8767,11211,1645,1812,520 -j DROP
+------------------------------------------------------------------------------------------------------------------
+iptables -A INPUT -p udp --dport 9987 -j ACCEPT
+iptables -A INPUT -p udp --sport 9987 -j ACCEPT
+iptables -A INPUT -p udp --dport 9988 -j ACCEPT
+iptables -A INPUT -p udp --sport 9988 -j ACCEPT
+iptables -A INPUT -p tcp --dport 30033 -j ACCEPT
+iptables -A INPUT -p tcp --sport 30033 -j ACCEPT
+iptables -A INPUT -p tcp --dport 10011 -j ACCEPT
+iptables -A INPUT -p tcp --sport 10011 -j ACCEPT
+iptables -A INPUT -p tcp --dport 41144 -j ACCEPT
+iptables -A INPUT -p tcp --sport 41144 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2010 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2010 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2011 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2011 -j ACCEPT
+iptables -A INPUT -p tcp --dport 2008 -j ACCEPT
+iptables -A INPUT -p tcp --sport 2008 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --sport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8087 -j ACCEPT
+iptables -A INPUT -p tcp --sport 8087 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp --sport 443 -j ACCEPT
+iptables -A INPUT -p tcp --dport 21 -j ACCEPT
+iptables -A INPUT -p tcp --sport 21 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --sport 22 -j ACCEPT
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p udp --sport 53 -j ACCEPT
+
+iptables -A OUTPUT -p udp -d weblist.teamspeak.com --dport 2010 -j ACCEPT
+iptables -A OUTPUT -p tcp -d accounting.teamspeak.com --dport 2008 -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -I INPUT -s 109.51.48.210 -j DROP
+iptables -A INPUT -p icmp --icmp-type echo-request -j REJECT
+iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags PSH,ACK PSH -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags ACK,URG URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,RST FIN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,PSH,URG -j DROP
+iptables -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
+
+iptables -A INPUT -f -j DROP
+iptables -A INPUT -p udp -m udp --sport 19 -j DROP
+iptables -A INPUT -p udp -m udp --sport 123 -j DROP
+iptables -A INPUT -p udp -m udp --sport 161 -j DROP
+iptables -A INPUT -p udp -m udp --sport 1433 -j DROP
+iptables -A INPUT -p udp -m udp --sport 1900 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27015 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27950 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27952 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27960 -j DROP
+iptables -A INPUT -p udp -m udp --sport 27965 -j DROP
+iptables -A INPUT -p icmp -j DROP
+iptables -A INPUT -p udp -m udp --sport 19329 -j DROP
+iptables -A INPUT -p udp -m udp --sport 53 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 53 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 19329 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 5353 -j DROP
+iptables -A INPUT -p udp -m udp --sport 5353 -j DROP
+iptables -A INPUT -p udp -m udp --sport 7143 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 7143 -j DROP
+iptables -A INPUT -p tcp -m tcp --sport 123 -j DROP
+iptables -A INPUT -p udp -m udp --sport 123 -j DROP
+iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -j DROP
+
+iptables -N syn-flood
+iptables -A syn-flood -m limit --limit 10/sec --limit-burst 15 -j RETURN
+iptables -A syn-flood -j LOG --log-prefix "SYN flood: "
+iptables -A syn-flood -j DROP
+iptables-save > /etc/iptables/rules.v4
+iptables-save > $HOME/firewall.txt
+
+UNPULLABLE : iptables -I PREROUTING -t raw -p udp --dport 1:65535 -m string --algo kmp --hex-string '|ff ff ff ff fe|' -j DROP

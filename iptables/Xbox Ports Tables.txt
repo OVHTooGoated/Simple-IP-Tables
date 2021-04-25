@@ -1,0 +1,16 @@
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+iptables -I INPUT -p tcp --dport 3073 -j ACCEPT
+iptables -I INPUT -p udp --dport 3074 -j ACCEPT
+iptables -I INPUT -p tcp --dport 53 -j ACCEPT
+iptables -I INPUT -p udp --dport 53 -j ACCEPT
+iptables -I INPUT -p udp --dport 500 -j ACCEPT
+iptables -I INPUT -p udp --dport 3544 -j ACCEPT
+iptables -I INPUT -p udp --dport 4500 -j ACCEPT
+iptables -I OUTPUT -p tcp --dport 80 -j ACCEPT
+iptables -I OUTPUT -p tcp --dport 3073 -j ACCEPT
+iptables -I OUTPUT -p udp --dport 3074 -j ACCEPT
+iptables -I OUTPUT -p tcp --dport 53 -j ACCEPT
+iptables -I OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -I OUTPUT -p udp --dport 500 -j ACCEPT
+iptables -I OUTPUT -p udp --dport 3544 -j ACCEPT
+iptables -I OUTPUT -p udp --dport 4500 -j ACCEPT
